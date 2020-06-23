@@ -3,7 +3,12 @@ import './Map.scss';
 
 import { StaticMap } from 'react-map-gl';
 import DeckGL from '@deck.gl/react';
-import { ArcLayer, ScatterplotLayer } from '@deck.gl/layers';
+import { ArcLayer, ScatterplotLayer, GeoJsonLayer, TextLayer } from '@deck.gl/layers';
+
+
+import CountyData from '../assets/county.csv';
+
+import CountyCentroidData from '../assets/counties_centroid.csv';
 
 const MAPBOX_TOKEN = process.env.MapboxAccessToken;
 
@@ -14,38 +19,55 @@ class Map extends Component {
             viewState: {
                 latitude: 31.968599,
                 longitude: -99.901810,
-                zoom: 5,
+                zoom: 5.5,
                 maxZoom: 16,
-                pitch: 35,
+                pitch: 10,
                 bearing: 0
             }
         }
-    }
 
-    renderLayers() {
-        return [
-            new ScatterplotLayer({
-                id: 'scatterplot-layer',
-                data: null,
-                pickable: true,
-                opacity: 0.8,
+        this.layers = [];
+
+        for (let i = 0; i < CountyData.length; i++) {
+            //Geo layer
+            let county = CountyData[i].county;
+            let geoData = "https://raw.githubusercontent.com/belopot/medmaps/master/assets/geojson/TX/" + county + ".geo.json";
+            let geoLayer = new GeoJsonLayer({
+                id: "geo_" + county,
+                data: geoData,
+                opacity: 1,
                 stroked: true,
                 filled: true,
-                radiusScale: 1100,
-                radiusMinPixels: 1,
-                radiusMaxPixels: 100,
-                lineWidthMinPixels: 2,
-                getPosition: d => d.coordinates,
-                getRadius: d => 150 + Math.log10(d.numOfInstances) * 300,
-                getFillColor: d => [100, 100, 100, 100],
-                getLineColor: d => [100, 0, 0, 255],
-                autoHighlight: true,
-                highlightColor: [100, 100, 0, 255],
-                onHover: (info, event) => {
-                    
-                },
+                extruded: false,
+                getElevation: 1,
+                lineWidthMinPixels: 1,
+                getFillColor: [250, 220, 170, 250],
+                getLineColor: [0, 0, 0],
+                pickable: true
             })
-        ];
+            this.layers.push(geoLayer);
+
+            //Geo-text layer
+            let d = CountyCentroidData.filter(d => d.county == county);
+            if (d.length > 0) {
+                console.log(d[0])
+                let geoTextLayer = new TextLayer({
+                    id: "geotext_" + county,
+                    data: d,
+                    getText: d => d.county,
+                    getPosition: d => [Number(d.longitude), Number(d.latitude), 20],
+                    getColor: d => [0, 0, 0],
+                    getSize: d => 10,
+                    sizeScale: 1
+                })
+                this.layers.push(geoTextLayer);
+            }
+        }
+
+    }
+
+    componentDidMount() {
+
     }
 
     onViewStateChange({ viewState }) {
@@ -57,7 +79,7 @@ class Map extends Component {
     render() {
         return (
             <DeckGL
-                layers={this.renderLayers()}
+                layers={this.layers}
                 viewState={this.state.viewState}
                 controller={true}
                 onViewStateChange={this.onViewStateChange.bind(this)}
