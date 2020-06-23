@@ -2,7 +2,8 @@ import React, { Component, Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import ResizeObserver from "resize-observer-polyfill";
 
-import { FlyToInterpolator } from 'react-map-gl';
+
+import Map from './components/Map';
 
 export default class App extends Component {
 
@@ -11,14 +12,7 @@ export default class App extends Component {
 
     
     this.state = {
-      viewState: {
-        longitude: 44.127197,
-        latitude: 28.5404328,
-        zoom: 2.5,
-        maxZoom: 16,
-        pitch: 35,
-        bearing: 0
-      }
+      
     }
 
   }
@@ -45,7 +39,7 @@ export default class App extends Component {
   render() {
     return (
       <Fragment>
-        <div></div>
+        <Map></Map>
       </Fragment>
     );
   }
