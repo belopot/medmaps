@@ -7,7 +7,7 @@ const CONFIG = {
   mode: 'development',
 
   entry: {
-    app: './app.js'
+    app: './src/app.js'
   },
 
   output: {
@@ -59,7 +59,8 @@ const CONFIG = {
 
   // Optional: Enables reading mapbox token from environment variable
   plugins: [new webpack.EnvironmentPlugin({
-    'MapboxAccessToken': "pk.eyJ1IjoiYmVsb3BvdCIsImEiOiJjazZzMjB4ZjQwYzhwM2xzNTVkcHBudTY4In0.FbuCqIEfhgMN3d02eZQ4hQ"
+    'MapboxAccessToken': "pk.eyJ1IjoiYmVsb3BvdCIsImEiOiJjazZzMjB4ZjQwYzhwM2xzNTVkcHBudTY4In0.FbuCqIEfhgMN3d02eZQ4hQ",
+    'MapboxStyle': "mapbox://styles/belopot/ckbt1oxxw0gjr1jlahbsj7c3s"
   })]
 };
 
