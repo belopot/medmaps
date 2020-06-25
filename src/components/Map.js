@@ -47,7 +47,7 @@ class Map extends Component {
                 extruded: false,
                 getElevation: 1,
                 lineWidthMinPixels: 1,
-                getFillColor: [50, 50, 50],
+                getFillColor: [172, 138, 3, 250],
                 getLineColor: [0, 0, 0],
                 pickable: false,
                 parameters: {
