@@ -4,11 +4,18 @@ import './Map.scss';
 import { StaticMap } from 'react-map-gl';
 import DeckGL from '@deck.gl/react';
 import { ArcLayer, ScatterplotLayer, GeoJsonLayer, TextLayer, IconLayer } from '@deck.gl/layers';
+import * as d3 from 'd3';
 
 
 const MAPBOX_TOKEN = process.env.MapboxAccessToken;
 
 const MAP_STYLE = process.env.MapboxStyle;
+
+const COLOR_GEO_TEXT = [0, 0, 0];
+const COLOR_GEO_EDGE = [231, 225, 239, 255];
+const COLOR_GEO_FILL = [136, 86, 167, 255];
+const COLOR_RURAL = [158, 188, 218, 230];
+const COLOR_NONRURAL = [200, 216, 224, 230];
 
 class Map extends Component {
     constructor(props) {
@@ -46,15 +53,22 @@ class Map extends Component {
                 filled: true,
                 extruded: false,
                 getElevation: 1,
-                lineWidthMinPixels: 1,
-                getFillColor: [172, 138, 3, 250],
-                getLineColor: [0, 0, 0],
+                lineWidthMinPixels: 2,
+                getFillColor: COLOR_GEO_FILL,
+                getLineColor: COLOR_GEO_EDGE,
                 pickable: false,
-                parameters: {
-                    blend: true,
-                    blendEquation: 0x1801, //DEPTH
-                    depthTest: true
-                },
+                transitions: {
+                    getFillColor: {
+                        duration: 5000,
+                        easing: d3.easeCubicInOut,
+                        enter: value => [COLOR_GEO_FILL[0], COLOR_GEO_FILL[1], COLOR_GEO_FILL[2], 0] // fade in
+                    },
+                    getLineColor: {
+                        duration: 5000,
+                        easing: d3.easeCubicInOut,
+                        enter: value => [COLOR_GEO_EDGE[0], COLOR_GEO_EDGE[1], COLOR_GEO_EDGE[2], 0] // fade in
+                    }
+                }
             })
             this.geoLayers.push(geoLayer);
 
@@ -67,10 +81,15 @@ class Map extends Component {
                     data: d,
                     getText: d => d.county,
                     getPosition: d => [Number(d.longitude), Number(d.latitude), 5000],
-                    getColor: d => [0, 0, 0],
+                    getColor: d => COLOR_GEO_TEXT,
                     sizeUnits: 'meters',
                     getSize: d => 10000,
                     sizeScale: 1,
+                    parameters: {
+                        blend: true,
+                        blendEquation: 0x1801, //DEPTH
+                        depthTest: true
+                    },
                 })
                 this.geoTextLayers.push(geoTextLayer);
             }
@@ -85,7 +104,7 @@ class Map extends Component {
         this.nonRuralProviders = [];
 
 
-        
+
     }
 
     updateLayers() {
@@ -104,19 +123,19 @@ class Map extends Component {
             filled: true,
             radiusScale: 1,
             radiusUnits: 'meters',
-            getPosition: d => [Number(d["Longitude"]), Number(d["Latitude"])],
+            getPosition: d => [Number(d["Longitude"]), Number(d["Latitude"]), 1000],
             getRadius: d => 96560.6,
-            getFillColor: d => [100, 100, 100, 200],
+            getFillColor: d => COLOR_RURAL,
             parameters: {
                 blend: true,
                 blendEquation: 0x8008, //MAX
-                depthTest: false
+                depthTest: true
             },
             transitions: {
                 getRadius: {
-                    delay: 13000,
                     enter: _ => [0], // grow from size 0,
-                    duration: 5000
+                    easing: d3.easeCubicIn,
+                    duration: 10000
                 }
             }
         })
@@ -131,22 +150,23 @@ class Map extends Component {
             filled: true,
             radiusScale: 1,
             radiusUnits: 'meters',
-            getPosition: d => [Number(d["Longitude"]), Number(d["Latitude"])],
+            getPosition: d => [Number(d["Longitude"]), Number(d["Latitude"]), 2000],
             getRadius: d => 48280.3,
-            getFillColor: d => [150, 150, 150, 100],
+            getFillColor: d => COLOR_NONRURAL,
             parameters: {
                 blend: true,
                 blendEquation: 0x8008, //MAX
-                depthTest: false
+                depthTest: true
             },
             transitions: {
                 getRadius: {
                     enter: _ => [0], // grow from size 0,
-                    duration: 5000
+                    easing: d3.easeCubicIn,
+                    duration: 13000
                 }
             }
         })
-        
+
 
 
         ///Choice layer
@@ -155,7 +175,7 @@ class Map extends Component {
             data: this.choiceProviders,
             pickable: true,
             wrapLongitude: true,
-            getPosition: d => [Number(d["Longitude"]), Number(d["Latitude"])],
+            getPosition: d => [Number(d["Longitude"]), Number(d["Latitude"]), 3000],
             iconAtlas: 'assets/marker/location-icon-atlas.png',
             iconMapping: 'assets/marker/location-icon-mapping.json',
             getIcon: d => 'marker-choice',
@@ -163,10 +183,10 @@ class Map extends Component {
             parameters: {
                 blend: true,
                 blendEquation: 0x88e5, //STATIC_READ
-                depthTest: false
+                depthTest: true
             },
         })
-        
+
 
         ///Single layer
         let singleLayer = new IconLayer({
@@ -174,7 +194,7 @@ class Map extends Component {
             data: this.singleProviders,
             pickable: true,
             wrapLongitude: true,
-            getPosition: d => [Number(d["Longitude"]), Number(d["Latitude"])],
+            getPosition: d => [Number(d["Longitude"]), Number(d["Latitude"]), 3000],
             iconAtlas: 'assets/marker/location-icon-atlas.png',
             iconMapping: 'assets/marker/location-icon-mapping.json',
             getIcon: d => 'marker-single',
@@ -182,17 +202,17 @@ class Map extends Component {
             parameters: {
                 blend: true,
                 blendEquation: 0x88e5, //STATIC_READ
-                depthTest: false
+                depthTest: true
             },
         })
 
         this.layers = [];
         this.layers.push(this.geoLayers);
-        this.layers.push(this.geoTextLayers);
         this.layers.push(ruralLayer)
         this.layers.push(nonRuralLayer)
         this.layers.push(choiceLayer);
         this.layers.push(singleLayer);
+        this.layers.push(this.geoTextLayers);
     }
 
     parseProviderData() {
@@ -211,14 +231,19 @@ class Map extends Component {
     componentDidUpdate(prevProps) {
         if (prevProps !== this.props) {
             this.setMapSize();
+
+            this.updateLayers();
+
             this.setState({
                 pData: this.props.ProviderData
             })
+
         }
     }
 
     componentDidMount() {
         this.setMapSize();
+        this.updateLayers();
     }
 
     setMapSize() {
@@ -239,7 +264,6 @@ class Map extends Component {
 
     render() {
 
-        this.updateLayers();
 
         return (
             <div className="map-root">
